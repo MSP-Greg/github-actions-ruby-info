@@ -1,0 +1,43 @@
+name: Actions Ruby
+
+on: [push]
+
+jobs:
+  build:
+    name: >-
+      Ruby: ${{ matrix.ruby }} OS: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-16.04', 'ubuntu-18.04', 'macos', 'windows-latest' ]
+        ruby: [ '2.3.x', '2.4.x', '2.5.x', '2.6.x' ]
+        exclude:
+        - os: ubuntu-18.04
+          ruby: 2.3.x
+        - os: macos
+          ruby: 2.3.x
+        - os: windows-latest
+          ruby: 2.3.x
+
+    steps:
+    - name: repo checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 10
+
+    - name: load ruby
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+
+    - name: Ruby Info
+      run:  ruby ruby_info.rb
+
+    - name: Add MSYS2 paths
+      uses: MSP-Greg/msys2-action/add_paths@master
+      if:   matrix.os == 'windows-latest'
+
+    - name: MSYS2 Package Info
+      run:  ruby pacman_query.rb
+      if:   matrix.os == 'windows-latest'
