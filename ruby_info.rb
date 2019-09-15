@@ -124,7 +124,7 @@ module VersInfo
         loads2('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE'       , 4)
       puts (' ' * 36) + loads1('socket' , 'Socket' , 4)
 
-      puts '', "Unavailable signals: ${BAD_SIGNAL_LIST.join(' ')}"
+      puts '', "Unavailable signals: #{BAD_SIGNAL_LIST.map(&:inspect).join(' ')}"
 
 
       gem_list
