@@ -7,6 +7,37 @@ require "rbconfig" unless defined? RbConfig
 
 module VersInfo
 
+  BAD_SIGNAL_LIST = begin
+    code = <<-HEREDOC
+      data = ''.dup
+
+      begin
+        Signal.trap('TERM') {  }
+      rescue ArgumentError
+        data << 'TERM'
+      end
+
+      list = Signal.list
+      data << 'HUP '  unless list.key? 'HUP'
+      data << 'INT '  unless list.key? 'INT'
+      data << 'USR1 ' unless list.key? 'USR1'
+      data << 'USR2 ' unless list.key? 'USR2'
+      puts data
+    HEREDOC
+    pipe = IO.popen RbConfig.ruby, 'r+'
+    pid = pipe.pid
+    pipe.puts code
+    pipe.close_write
+    begin
+      Process.kill :TERM, pid
+      pipe.read.strip.split(' ').sort.map(&:to_sym)
+    rescue Errno::EINVAL
+      "#{pipe.read.strip} TERM".split(' ').sort.map(&:to_sym)
+    ensure
+      Process.wait pid
+    end
+  end
+
   YELLOW = "\e[33m"
   RESET = "\e[0m"
 
@@ -44,7 +75,7 @@ module VersInfo
       puts
 
       openssl_conf = ENV.delete 'OPENSSL_CONF'
-      
+
       if first('openssl', 'OpenSSL::VERSION', 0) { OpenSSL::VERSION }
         additional('SSL Verify'             , 0, 4) { ssl_verify }
         additional('OPENSSL_VERSION'        , 0, 4) { OpenSSL::OPENSSL_VERSION }
@@ -92,6 +123,9 @@ module VersInfo
       puts chk_cli("rake -V", /\Arake, version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads2('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE'       , 4)
       puts (' ' * 36) + loads1('socket' , 'Socket' , 4)
+
+      puts '', "Unavailable signals: ${BAD_SIGNAL_LIST.join(' ')}"
+
 
       gem_list
     end

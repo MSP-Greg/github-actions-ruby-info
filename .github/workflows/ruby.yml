@@ -15,10 +15,10 @@ jobs:
         exclude:
         - os: ubuntu-18.04
           ruby: 2.3.x
-        - os: macos
-          ruby: 2.3.x
-        - os: windows-latest
-          ruby: 2.3.x
+        #- os: macos
+        #  ruby: 2.3.x
+        #- os: windows-latest
+        #  ruby: 2.3.x
 
     steps:
     - name: repo checkout
