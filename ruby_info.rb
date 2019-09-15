@@ -113,6 +113,8 @@ module VersInfo
           "#{'Bignum::GMP_VERSION'.ljust( @@col_wid[3])}Unknown"
       end
 
+      puts '', "Unavailable signals: #{BAD_SIGNAL_LIST.map(&:inspect).join(' ')}"
+
       highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 39}"
       puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads2('dbm'     , 'DBM'     , 'zlib'          , 'Zlib'           , 4)
@@ -123,9 +125,6 @@ module VersInfo
       puts chk_cli("rake -V", /\Arake, version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads2('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE'       , 4)
       puts (' ' * 36) + loads1('socket' , 'Socket' , 4)
-
-      puts '', "Unavailable signals: #{BAD_SIGNAL_LIST.map(&:inspect).join(' ')}"
-
 
       gem_list
     end

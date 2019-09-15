@@ -24,7 +24,7 @@ jobs:
       with:
         fetch-depth: 10
 
-    - name: load ruby
+    - name: set ruby version
       uses: actions/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
