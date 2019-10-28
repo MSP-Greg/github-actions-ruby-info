@@ -38,5 +38,7 @@ jobs:
       if:   matrix.os == 'windows-latest'
 
     - name: MSYS2 Package Info
-      run:  ruby pacman_query.rb
+      run: |
+        ridk version
+        ruby pacman_query.rb
       if:   matrix.os == 'windows-latest'
