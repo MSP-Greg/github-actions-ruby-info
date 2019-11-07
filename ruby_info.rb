@@ -60,10 +60,11 @@ module VersInfo
 
       highlight "\n#{RUBY_DESCRIPTION}"
       puts
-      puts "Build Type/Info: #{ri2_vers}"
+      puts " Build Type/Info: #{ri2_vers}" if WIN
       gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"] ?
         RbConfig::CONFIG["CC_VERSION_MESSAGE"][/\A.+?\n/].strip : 'unknown'
-      puts "       gcc info: #{gcc}"
+      puts "        gcc info: #{gcc}"
+      puts "RbConfig::TOPDIR: #{RbConfig::TOPDIR}"
       puts
       first('rubygems'  , 'Gem::VERSION'  , 2)  { Gem::VERSION     }
       puts
