@@ -1,4 +1,4 @@
-# 2019-10-26 Update
+# 2019-12-15 Update
 name: Actions Ruby
 
 on: [push]
@@ -6,12 +6,12 @@ on: [push]
 jobs:
   build:
     name: >-
-      Ruby: ${{ matrix.ruby }} OS: ${{ matrix.os }}
+      ${{ matrix.ruby }}  ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-16.04', 'ubuntu-18.04', 'macos-latest', 'windows-latest' ]
+        os: [ 'ubuntu-16.04', 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
         ruby: [ '2.3.x', '2.4.x', '2.5.x', '2.6.x' ]
         exclude:
         #- os: ubuntu-18.04
