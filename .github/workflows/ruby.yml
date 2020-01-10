@@ -12,18 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ 'ubuntu-16.04', 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
-        ruby: [ '2.3.x', '2.4.x', '2.5.x', '2.6.x' ]
-        exclude:
-        #- os: ubuntu-18.04
-        #  ruby: 2.3.x
-        - os: windows-latest
-          ruby: 2.3.x
+        ruby: [ '2.4.x', '2.5.x', '2.6.x' ]
 
     steps:
     - name: repo checkout
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 10
+      uses: actions/checkout@v2
 
     - name: set ruby version
       uses: actions/setup-ruby@v1
