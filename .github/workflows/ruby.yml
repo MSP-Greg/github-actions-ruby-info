@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ 'ubuntu-16.04', 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
-        ruby: [ '2.4.x', '2.5.x', '2.6.x' ]
+        ruby: [ '2.4.x', '2.5.x', '2.6.x', '2.7.x' ]
 
     steps:
     - name: repo checkout
@@ -27,7 +27,7 @@ jobs:
       run:  ruby ruby_info.rb
 
     - name: Add MSYS2 paths
-      uses: MSP-Greg/msys2-action/add_paths@master
+      uses: MSP-Greg/msys2-action@master
       if:   matrix.os == 'windows-latest'
 
     - name: MSYS2 Package Info
