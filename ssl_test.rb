@@ -3,7 +3,7 @@
 ruby C:\Greg\GitHub\appveyor_ruby\ssl_test.rb
 =end
 
-#require_relative "utils"
+#require_relative 'utils'
 
 require 'openssl'
 require 'socket'
@@ -39,12 +39,14 @@ module TestSSL
           [:TLSv1_2_server, 'TLSv1_2']
         ]
       end
+
       # Prepare for testing & do sanity check
       supported = []
       possible_versions.each do |ary|
         ver, desc = ary
         catch(:unsupported) {
           ctx_proc = proc { |ctx|
+            # ctx.security_level = 2 # testing/debug only
             begin
               if HAS_MIN_MAX
                 ctx.min_version = ctx.max_version = ver
@@ -58,7 +60,7 @@ module TestSSL
           start_server(ctx_proc: ctx_proc, ignore_listener_error: true) do |port|
             begin
               server_connect(port) { |ssl|
-                ssl.puts "abc"; ssl.gets
+                ssl.puts 'abc'; ssl.gets
               }
             rescue OpenSSL::SSL::SSLError, Errno::ECONNRESET => e
               # puts e.message
@@ -74,17 +76,19 @@ module TestSSL
     private
 
     def setup
-      @ca_key  = pkey("rsa2048")
-      @svr_key = pkey("rsa1024")
-      ca      = OpenSSL::X509::Name.parse("/DC=org/DC=ruby-lang/CN=CA")
-      svr     = OpenSSL::X509::Name.parse("/DC=org/DC=ruby-lang/CN=localhost")
+      key = OpenSSL::SSL.const_defined?(:TLS1_3_VERSION) ? 'rsa2048' : 'rsa1024'
+      @ca_key  = pkey key
+      @svr_key = pkey key
+
+      ca  = OpenSSL::X509::Name.parse '/DC=org/DC=ruby-lang/CN=CA'
+      svr = OpenSSL::X509::Name.parse '/DC=org/DC=ruby-lang/CN=localhost'
 
       ca_exts = [
-        ["basicConstraints","CA:TRUE",true],
-        ["keyUsage","cRLSign,keyCertSign",true],
+        ['basicConstraints', 'CA:TRUE', true],
+        ['keyUsage', 'cRLSign,keyCertSign', true],
       ]
       ee_exts = [
-        ["keyUsage","keyEncipherment,digitalSignature",true],
+        ['keyUsage', 'keyEncipherment,digitalSignature', true],
       ]
 
       @ca_cert  = issue_cert(ca , @ca_key , 1, ca_exts, nil     , nil   )
@@ -93,14 +97,16 @@ module TestSSL
    
     def readwrite_loop(ctx, ssl)
       while line = ssl.gets
-        ssl.write(line)
+        ssl.write line
       end
     end
 
     def start_server(verify_mode: OpenSSL::SSL::VERIFY_NONE, start_immediately: true,
                      ctx_proc: nil, server_proc: method(:readwrite_loop),
                      ignore_listener_error: false, &block)
-      IO.pipe {|stop_pipe_r, stop_pipe_w|
+
+      dh = OpenSSL::SSL.const_defined?(:TLS1_3_VERSION) ? 'dh2048' : 'dh1024'
+      IO.pipe do |stop_pipe_r, stop_pipe_w|
         store = OpenSSL::X509::Store.new
         store.add_cert(@ca_cert)
         store.purpose = OpenSSL::X509::PURPOSE_SSL_CLIENT
@@ -108,12 +114,12 @@ module TestSSL
         ctx.cert_store = store
         ctx.cert = @svr_cert
         ctx.key  = @svr_key
-        ctx.tmp_dh_callback = proc { pkey_dh("dh1024") }
+        ctx.tmp_dh_callback = proc { pkey_dh dh }
         ctx.verify_mode = verify_mode
         ctx_proc.call(ctx) if ctx_proc
 
         Socket.do_not_reverse_lookup = true
-        tcps = TCPServer.new("127.0.0.1", 0)
+        tcps = TCPServer.new '127.0.0.1', 0
         port = tcps.connect_address.ip_port
 
         ssls = OpenSSL::SSL::SSLServer.new(tcps, ctx)
@@ -177,7 +183,7 @@ module TestSSL
           threads.each { |th|
             begin
               th.join(10) or
-                th.raise(RuntimeError, "[start_server] thread did not exit in 10 secs")
+                th.raise(RuntimeError, '[start_server] thread did not exit in 10 secs')
 #            rescue (defined?(MiniTest::Skip) ? MiniTest::Skip : Test::Unit::PendedError)
 #              # MiniTest::Skip is for the Ruby tree
 #              pend = $!
@@ -198,11 +204,11 @@ module TestSSL
           end          
           values
         end
-      }
+      end
     end
 
     def server_connect(port, ctx = nil)
-      sock = TCPSocket.new("127.0.0.1", port)
+      sock = TCPSocket.new '127.0.0.1', port
       ssl = ctx ? OpenSSL::SSL::SSLSocket.new(sock, ctx) : OpenSSL::SSL::SSLSocket.new(sock)
       ssl.sync_close = true
       ssl.connect
@@ -216,7 +222,7 @@ module TestSSL
     end
 
     def issue_cert(dn, key, serial, extensions, issuer, issuer_key,
-                   not_before: nil, not_after: nil, digest: "sha256")
+                   not_before: nil, not_after: nil, digest: 'sha256')
       cert = OpenSSL::X509::Certificate.new
       issuer = cert unless issuer
       issuer_key = key unless issuer_key
@@ -231,26 +237,25 @@ module TestSSL
       ef = OpenSSL::X509::ExtensionFactory.new
       ef.subject_certificate = cert
       ef.issuer_certificate = issuer
-      extensions.each{|oid, value, critical|
-        cert.add_extension(ef.create_extension(oid, value, critical))
+      extensions.each{ |oid, value, critical|
+        cert.add_extension ef.create_extension(oid, value, critical)
       }
-      cert.sign(issuer_key, digest)
+      cert.sign issuer_key, digest
       cert
     end
 
     def pkey(name)
-      OpenSSL::PKey.read(read_file(name))
+      OpenSSL::PKey.read read_file name
     end
 
     def pkey_dh(name)
       # DH parameters can be read by OpenSSL::PKey.read atm
-      OpenSSL::PKey::DH.new(read_file(name))
+      OpenSSL::PKey::DH.new read_file name
     end
 
     def read_file(name)
-        File.read(File.join(__dir__, "pkey", name + ".pem"))
+        File.read File.join(__dir__, 'pkey', name + '.pem')
     end
 
   end
- 
 end

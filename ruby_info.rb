@@ -116,7 +116,7 @@ module VersInfo
 
       puts '', "Unavailable signals: #{BAD_SIGNAL_LIST.map(&:inspect).join(' ')}"
 
-      highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 39}"
+      highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 5}       #{@@dash * 5} Require Test #{@@dash * 5}"
       puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads2('dbm'     , 'DBM'     , 'zlib'          , 'Zlib'           , 4)
 
@@ -188,15 +188,16 @@ module VersInfo
 
     def additional_file(text, idx, indent = 0)
       fn = yield
+      disp_fn = fn.sub "#{RbConfig::TOPDIR}/", '' if fn
       if fn.nil?
         found = 'No ENV key'
       elsif /\./ =~ File.basename(fn)
         found = File.exist?(fn) ?
-          "#{File.mtime(fn).utc.strftime('File Dated %F').ljust(23)}#{fn}" :
+          "#{File.mtime(fn).utc.strftime('File Dated %F').ljust(23)}#{disp_fn}" :
           "#{'File Not Found!'.ljust(23)}#{fn}"
       else
         found = Dir.exist?(fn) ?
-          "#{'Dir  Exists'.ljust(23)}#{fn}" :
+          "#{'Dir  Exists'.ljust(23)}#{disp_fn}" :
           "#{'Dir  Not Found!'.ljust(23)}#{fn}"
       end
       puts "#{(' ' * indent + text).ljust(@@col_wid[idx])}#{found}"
@@ -225,6 +226,7 @@ module VersInfo
     end
 
     def gem_list
+      name_wid = 24
       require "rubygems/commands/list_command"
       sio_in, sio_out, sio_err = StringIO.new, StringIO.new, StringIO.new
       strm_io = Gem::StreamUI.new(sio_in, sio_out, sio_err, false)
@@ -256,14 +258,14 @@ module VersInfo
           ary_bundled << [gem_name, all_vers.strip, cnt_vers]
         end
       }
-      highlight "\n#{@@dash * 23} #{"Default Gems #{@@dash * 5}".ljust(27)} #{@@dash * 23} Bundled Gems #{@@dash * 5}"
+      highlight "\n#{@@dash * 23} #{"Default Gems #{@@dash * 5}".ljust(name_wid)} #{@@dash * 23} Bundled Gems #{@@dash * 5}"
 
       max_rows = [ary_default.length || 0, ary_bundled.length || 0].max
       (0..(max_rows-1)).each { |i|
         dflt = ary_default[i] ? ary_default[i] : ["", "", 0]
         bndl = ary_bundled[i] ? ary_bundled[i] : nil
 
-        str_dflt = "#{dflt[1].rjust(23)} #{dflt[0].ljust(27)}"
+        str_dflt = "#{dflt[1].rjust(23)} #{dflt[0].ljust(name_wid)}"
         str_bndl = bndl ? "#{bndl[1].rjust(23)} #{bndl[0]}" : ''
 
         puts bndl ? "#{str_dflt} #{str_bndl}".rstrip : "#{str_dflt}".rstrip

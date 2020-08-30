@@ -13,9 +13,6 @@ module Msys2Info
 
   class << self
     def run
-      real_path = File.realpath "#{RbConfig::TOPDIR}/msys64"
-      puts "Real path: #{real_path}"
-      
       case ARGV[0]
       when 'utf-8'
         d4 = "\u2015".dup.force_encoding('utf-8') * 4
