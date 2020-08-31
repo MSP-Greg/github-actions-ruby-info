@@ -11,6 +11,8 @@ module Msys2Info
   PRE64 = /\Amingw-w64-x86_64-/
   PRE32 = /\Amingw-w64-i686-/
 
+  WID = 45
+
   class << self
     def run
       case ARGV[0]
@@ -32,22 +34,39 @@ module Msys2Info
         end
       }
 
-      hsh[:x64]    = [] unless hsh[:x64]
-      hsh[:msys2]  = [] unless hsh[:msys2]
+      hsh[:i686]  = [] unless hsh[:i686]
+      hsh[:x64]   = [] unless hsh[:x64]
+      hsh[:msys2] = [] unless hsh[:msys2]
 
-      unless hsh[:x64].empty?
-        highlight "\n#{d4 + ' mingw-w64-x86_64 Packages ' + d4}"
-        len = hsh[:x64].length - 1
-        0.upto(len) { |i|
-          puts hsh[:x64][i].sub(PRE64, '')
+      unless hsh[:i686].empty? && hsh[:x64].empty?
+        highlight "\n#{(d4 + ' mingw-w64-x86_64 Packages ' + d4).ljust WID} #{d4} mingw-w64-i686 Packages #{d4}"
+        max_len = [hsh[:i686].length, hsh[:x64].length].max - 1
+        x, i = 0,0
+        0.upto(max_len) { |j|
+          # get package base name
+          x64  = name_64 hsh[:x64][x]
+          i686 = name_32 hsh[:i686][i]
+          # puts "#{x64.ljust 30}  #{i686.ljust 30}"  
+          if x64 != i686
+            if x64 < name_32(hsh[:i686][i+1])
+              puts "#{(hsh[:x64][x].sub(PRE64,'') || '')}"
+              x += 1
+            elsif i686 < name_64(hsh[:x64][x+1].sub(PRE64,''))
+              puts "#{''.ljust WID} #{hsh[:i686][i].sub(PRE32,'') || ''}"        
+              i += 1
+            end
+          else
+            puts "#{(hsh[:x64][x].sub(PRE64,'') || '').ljust WID} #{hsh[:i686][i].sub(PRE32,'') || ''}"
+            x += 1 ; i += 1
+          end
         }
       end
 
       unless hsh[:msys2].empty?
-        highlight "\n#{(d4 + ' MSYS2 Packages ' + d4).ljust(59)} #{d4} MSYS2 Packages #{d4}"
+        highlight "\n#{(d4 + ' MSYS2 Packages ' + d4).ljust WID} #{d4} MSYS2 Packages #{d4}"
         half = hsh[:msys2].length/2.ceil
         0.upto(half -1) { |i|
-          puts "#{(hsh[:msys2][i] || '').ljust(59)} #{hsh[:msys2][i + half] || ''}"
+          puts "#{(hsh[:msys2][i] || '').ljust WID} #{hsh[:msys2][i + half] || ''}"
         }
       end
     end
@@ -58,6 +77,15 @@ module Msys2Info
       puts "#{YELLOW}#{str2}#{RESET}"
     end
 
+    def name_64(pkg)
+      return '' unless pkg
+      pkg.split(' ')[0].sub(PRE64, '')
+    end
+    
+    def name_32(pkg)
+      return '' unless pkg
+      pkg.split(' ')[0].sub(PRE32, '')
+    end
   end
 end
 Msys2Info.run
