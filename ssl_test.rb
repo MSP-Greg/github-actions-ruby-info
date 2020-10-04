@@ -7,6 +7,7 @@ ruby C:\Greg\GitHub\appveyor_ruby\ssl_test.rb
 
 require 'openssl'
 require 'socket'
+require 'stringio'
 
 module TestSSL
 
@@ -42,33 +43,41 @@ module TestSSL
 
       # Prepare for testing & do sanity check
       supported = []
-      possible_versions.each do |ary|
-        ver, desc = ary
-        catch(:unsupported) {
-          ctx_proc = proc { |ctx|
-            # ctx.security_level = 2 # testing/debug only
-            begin
-              if HAS_MIN_MAX
-                ctx.min_version = ctx.max_version = ver
-              else
-                ctx.ssl_version = ver
+
+      begin
+        orig_stderr = $stderr
+        $stderr = StringIO.new
+      
+        possible_versions.each do |ary|
+          ver, desc = ary
+          catch(:unsupported) {
+            ctx_proc = proc { |ctx|
+              # ctx.security_level = 2 # testing/debug only
+              begin
+                if HAS_MIN_MAX
+                  ctx.min_version = ctx.max_version = ver
+                else
+                  ctx.ssl_version = ver
+                end
+              rescue ArgumentError, OpenSSL::SSL::SSLError
+                throw :unsupported
               end
-            rescue ArgumentError, OpenSSL::SSL::SSLError
-              throw :unsupported
+            }
+            start_server(ctx_proc: ctx_proc, ignore_listener_error: true) do |port|
+              begin
+                server_connect(port) { |ssl|
+                  ssl.puts 'abc'; ssl.gets
+                }
+              rescue OpenSSL::SSL::SSLError, Errno::ECONNRESET => e
+                # puts e.message
+              else
+                supported << desc
+              end
             end
           }
-          start_server(ctx_proc: ctx_proc, ignore_listener_error: true) do |port|
-            begin
-              server_connect(port) { |ssl|
-                ssl.puts 'abc'; ssl.gets
-              }
-            rescue OpenSSL::SSL::SSLError, Errno::ECONNRESET => e
-              # puts e.message
-            else
-              supported << desc
-            end
-          end
-        }
+        end
+      ensure
+        $stderr = orig_stderr
       end
       supported.join ' '
     end

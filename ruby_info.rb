@@ -1,43 +1,13 @@
 # frozen_string_literal: true
 # encoding: UTF-8
 
-# Copyright (C) 2017 MSP-Greg
+# Copyright (C) 2017-2020 MSP-Greg
 
 require "rbconfig" unless defined? RbConfig
 
 module VersInfo
 
-  BAD_SIGNAL_LIST = begin
-    code = <<-HEREDOC
-      data = ''.dup
-
-      begin
-        Signal.trap('TERM') {  }
-      rescue ArgumentError
-        data << 'TERM'
-      end
-
-      list = Signal.list
-      data << 'HUP '  unless list.key? 'HUP'
-      data << 'INT '  unless list.key? 'INT'
-      data << 'USR1 ' unless list.key? 'USR1'
-      data << 'USR2 ' unless list.key? 'USR2'
-      puts data
-    HEREDOC
-    pipe = IO.popen RbConfig.ruby, 'r+'
-    pid = pipe.pid
-    pipe.puts code
-    pipe.close_write
-    begin
-      Process.kill :TERM, pid
-      pipe.read.strip.split(' ').sort.map(&:to_sym)
-    rescue Errno::EINVAL
-      "#{pipe.read.strip} TERM".split(' ').sort.map(&:to_sym)
-    ensure
-      Process.wait pid
-    end
-  end
-
+  SIGNAL_LIST = Signal.list.keys.sort.join ' '
   YELLOW = "\e[33m"
   RESET = "\e[0m"
 
@@ -114,7 +84,7 @@ module VersInfo
           "#{'Bignum::GMP_VERSION'.ljust( @@col_wid[3])}Unknown"
       end
 
-      puts '', "Unavailable signals: #{BAD_SIGNAL_LIST.map(&:inspect).join(' ')}"
+      puts '', "Available signals: #{SIGNAL_LIST}"
 
       highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 5}       #{@@dash * 5} Require Test #{@@dash * 5}"
       puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
