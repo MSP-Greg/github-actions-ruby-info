@@ -197,40 +197,25 @@ module VersInfo
 
     def gem_list
       name_wid = 24
-      require "rubygems/commands/list_command"
-      sio_in, sio_out, sio_err = StringIO.new, StringIO.new, StringIO.new
-      strm_io = Gem::StreamUI.new(sio_in, sio_out, sio_err, false)
-      cmd = Gem::Commands::ListCommand.new
-      orig_ui = cmd.ui
-      cmd.ui = strm_io
-      cmd.execute
-      ary = sio_out.string.split(/\r*\n/)
-      cmd.ui = orig_ui
-
-      ary_bundled = []
       ary_default = []
+      ary_bundled = []
 
-      ary.each { |s|
-        gem_name = s[/\A[^ ]+/]
-        is_default = false
-        all_vers = ''.dup
-        cnt_vers = 0
-        s.scan(/(default: |\(|, )(\d+\.\d+[^,)]*)/) { |type, vers|
-          if type == 'default: '
-            is_default ||= true
+      Gem::Specification.each { |s|
+        if s.spec_dir.start_with? Gem.dir
+          if s.default_gem?
+            ary_default << [s.name, s.version.to_s]
+          else
+            ary_bundled << [s.name, s.version.to_s]
           end
-          all_vers += " #{vers}"
-          cnt_vers += 1
-        }
-        if is_default
-          ary_default << [gem_name, all_vers.strip, cnt_vers]
-        else
-          ary_bundled << [gem_name, all_vers.strip, cnt_vers]
         end
       }
+      ary_default.sort_by! { |a| a[0] }
+      ary_bundled.sort_by! { |a| a[0] }
+
       highlight "\n#{@@dash * 23} #{"Default Gems #{@@dash * 5}".ljust(name_wid)} #{@@dash * 23} Bundled Gems #{@@dash * 5}"
 
       max_rows = [ary_default.length || 0, ary_bundled.length || 0].max
+
       (0..(max_rows-1)).each { |i|
         dflt = ary_default[i] ? ary_default[i] : ["", "", 0]
         bndl = ary_bundled[i] ? ary_bundled[i] : nil
@@ -240,12 +225,6 @@ module VersInfo
 
         puts bndl ? "#{str_dflt} #{str_bndl}".rstrip : "#{str_dflt}".rstrip
       }
-    ensure
-      sio_in.close
-      sio_out.close
-      sio_err.close
-      strm_io = nil
-      cmd = nil
     end
 
     def ssl_methods

@@ -11,26 +11,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest ]
-        ruby: [ 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, head ]
+        os: [ ubuntu-20.04, ubuntu-18.04, ubuntu-16.04, macos-11.0, macos-10.15, windows-2019 ]
+        ruby: [ head, '3.0', 2.7, 2.6, 2.5, 2.4, 2.3, 2.2]
         include:
-          - { os: windows-latest , ruby: mingw }
-          - { os: windows-latest , ruby: mswin }
+          - { os: windows-2019 , ruby: mingw }
+          - { os: windows-2019 , ruby: mswin }
 
     steps:
-    - name: repo checkout
-      uses: actions/checkout@v2
+      - name: repo checkout
+        uses: actions/checkout@v2
 
-    - name: set ruby version
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby }}
+      - name: set ruby version
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
 
-    - name: Ruby Info
-      run:  ruby ruby_info.rb
+      - name: Ruby Info
+        run:  ruby ruby_info.rb
 
-    - name: MSYS2 Package Info
-      if:   matrix.os == 'windows-latest' && matrix.ruby > '2.3' && matrix.ruby != 'mswin'
-      run:  |
-        ridk version
-        ruby pacman_query.rb
+      - name: Windows ridk version
+        if:   startsWith(matrix.os, 'windows') && matrix.ruby > '2.3' && matrix.ruby != 'mswin'
+        run:  ridk version
