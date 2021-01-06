@@ -1,7 +1,6 @@
-# 2020-10-12 Update
 name: Actions Ruby
 
-on: [push]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
