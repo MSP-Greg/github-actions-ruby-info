@@ -7,7 +7,7 @@ require "rbconfig" unless defined? RbConfig
 
 module VersInfo
 
-  SIGNAL_LIST = Signal.list.keys.sort.join ' '
+  SIGNAL_LIST = Signal.list.keys.sort
   YELLOW = "\e[33m"
   RESET = "\e[0m"
 
@@ -15,13 +15,14 @@ module VersInfo
 
   WIN = !!RUBY_PLATFORM[/mingw/]
 
+  # some fonts render \u2015 as a solid, other not...
   case ARGV[0]
   when 'utf-8'
-    @@dash = "\u2015".dup.force_encoding 'utf-8'
+    @@dash = "\u2500".dup.force_encoding 'utf-8'
   when 'Windows-1252'
     @@dash = 151.chr
   else
-    @@dash = "\u2015".dup.force_encoding 'utf-8'
+    @@dash = "\u2500".dup.force_encoding 'utf-8'
   end
 
   class << self
@@ -84,7 +85,15 @@ module VersInfo
           "#{'Bignum::GMP_VERSION'.ljust( @@col_wid[3])}Unknown"
       end
 
-      puts '', "Available signals: #{SIGNAL_LIST}"
+      puts '', "Available signals:"
+      if SIGNAL_LIST.length > 13
+        puts "  #{SIGNAL_LIST.select { |s| s <  'K' }.map { |s| s.ljust 7 }.join}",
+             "  #{SIGNAL_LIST.select { |s| s >= 'K' && s < 'TT'}.map { |s| s.ljust 7 }.join}",
+             "  #{SIGNAL_LIST.select { |s| s >= 'TT'}.map { |s| s.ljust 7 }.join}"
+      else
+        puts "  #{SIGNAL_LIST.map { |s| s.ljust 7 }.join}"
+      end
+
 
       highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 5}       #{@@dash * 5} Require Test #{@@dash * 5}"
       puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
@@ -100,7 +109,7 @@ module VersInfo
       gem_list
     end
 
-  private
+    private
 
     def ri2_vers
       fn = "#{RbConfig::TOPDIR}/lib/ruby/site_ruby/#{RbConfig::CONFIG['ruby_version']}/ruby_installer/runtime/package_version.rb"
