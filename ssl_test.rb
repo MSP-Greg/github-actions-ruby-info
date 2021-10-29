@@ -12,7 +12,7 @@ require 'stringio'
 module TestSSL
 
   HAS_MIN_MAX = (OpenSSL::VERSION >= '2.1')
-  
+
   class << self
 
     def check_supported_protocol_versions
@@ -23,7 +23,7 @@ module TestSSL
 
         ssl.const_defined?(:SSL3_VERSION)   &&
           possible_versions << [ssl::SSL3_VERSION  , 'SSLv3'  ]
-        ssl.const_defined?(:TLS1_VERSION)   && 
+        ssl.const_defined?(:TLS1_VERSION)   &&
           possible_versions << [ssl::TLS1_VERSION  , 'TLSv1'  ]
         ssl.const_defined?(:TLS1_1_VERSION) &&
           possible_versions << [ssl::TLS1_1_VERSION, 'TLSv1_1']
@@ -47,7 +47,7 @@ module TestSSL
       begin
         orig_stderr = $stderr
         $stderr = StringIO.new
-      
+
         possible_versions.each do |ary|
           ver, desc = ary
           catch(:unsupported) {
@@ -103,7 +103,7 @@ module TestSSL
       @ca_cert  = issue_cert(ca , @ca_key , 1, ca_exts, nil     , nil   )
       @svr_cert = issue_cert(svr, @svr_key, 2, ee_exts, @ca_cert, @ca_key)
     end
-   
+
     def readwrite_loop(ctx, ssl)
       while line = ssl.gets
         ssl.write line
@@ -210,7 +210,7 @@ module TestSSL
             rescue Exception
               errs << [th, $!]
             end
-          end          
+          end
           values
         end
       end
@@ -254,12 +254,12 @@ module TestSSL
     end
 
     def pkey(name)
-      OpenSSL::PKey.read read_file name
+      OpenSSL::PKey.read read_file(name)
     end
 
     def pkey_dh(name)
       # DH parameters can be read by OpenSSL::PKey.read atm
-      OpenSSL::PKey::DH.new read_file name
+      OpenSSL::PKey::DH.new read_file(name)
     end
 
     def read_file(name)
