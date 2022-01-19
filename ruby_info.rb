@@ -97,14 +97,16 @@ module VersInfo
 
       highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 5}       #{@@dash * 5} Require Test #{@@dash * 5}"
       puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads2('dbm'     , 'DBM'     , 'zlib'          , 'Zlib'           , 4)
+        loads('dbm'     , 'DBM'     , 'zlib'          , 'Zlib')
 
       puts chk_cli("gem --version", /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads2('digest'  , 'Digest'  , 'win32/registry', 'Win32::Registry', 4)
+        loads('digest'  , 'Digest'  , 'win32/registry', 'Win32::Registry')
+
+      puts chk_cli("irb --version", /\Airb +(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+        loads('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE')
 
       puts chk_cli("rake -V", /\Arake, version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads2('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE'       , 4)
-      puts (' ' * 36) + loads1('socket' , 'Socket' , 4)
+        loads('socket'  , 'Socket')
 
       gem_list
     end
@@ -123,21 +125,14 @@ module VersInfo
       end
     end
 
-    def loads1(req, str, idx)
-      require req
-      "#{str.ljust(15)}  Ok"
-    rescue LoadError
-      "#{str.ljust(15)}  Does not load!"
-    end
-
-    def loads2(req1, str1, req2, str2, idx)
+    def loads(req1, str1, req2 = nil, str2 = nil)
       begin
         require req1
         str = "#{str1.ljust(15)}  Ok            "
       rescue LoadError
         str = "#{str1.ljust(15)}  LoadError     "
       end
-      if WIN || !req2[/\Awin32/]
+      if req2 && (WIN || !req2[/\Awin32/])
         begin
           require req2
           str + "#{str2.ljust(15)}  Ok"
@@ -167,17 +162,24 @@ module VersInfo
 
     def additional_file(text, idx, indent = 0)
       fn = yield
-      disp_fn = fn.sub "#{RbConfig::TOPDIR}/", '' if fn
       if fn.nil?
         found = 'No ENV key'
-      elsif /\./ =~ File.basename(fn)
-        found = File.exist?(fn) ?
-          "#{File.mtime(fn).utc.strftime('File Dated %F').ljust(23)}#{disp_fn}" :
-          "#{'File Not Found!'.ljust(23)}#{fn}"
       else
-        found = Dir.exist?(fn) ?
-          "#{'Dir  Exists'.ljust(23)}#{disp_fn}" :
-          "#{'Dir  Not Found!'.ljust(23)}#{fn}"
+        disp_fn = fn
+        disp_fn = disp_fn.sub "#{RbConfig::TOPDIR}/", '' if fn && fn.length > 34
+
+        if /\./ =~ File.basename(fn)
+          found = File.exist?(fn) ?
+            "#{File.mtime(fn).utc.strftime('File Dated %F').ljust(23)}#{disp_fn}" :
+            "#{'File Not Found!'.ljust(23)}#{fn}"
+        elsif Dir.exist? fn
+          found = "#{'Dir  Exists'.ljust(23)}#{disp_fn}\n".dup
+          unless fn == (t = File.realpath(fn))
+            found << "#{' ' * @@col_wid[idx]}#{'Dir  realpath'.ljust(23)}#{t}\n"
+          end
+        else
+          found = "#{'Dir  Not Found!'.ljust(23)}#{fn}"
+        end
       end
       puts "#{(' ' * indent + text).ljust(@@col_wid[idx])}#{found}"
     rescue LoadError
