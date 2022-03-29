@@ -37,6 +37,9 @@ module VersInfo
       puts "        gcc info: #{gcc}"
       puts "RbConfig::TOPDIR: #{RbConfig::TOPDIR}"
       puts
+      puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}"
+      puts "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}"
+      puts
       first('rubygems'  , 'Gem::VERSION'  , 2)  { Gem::VERSION     }
       puts
       first('bigdecimal', 'BigDecimal.ver', 2)  {
