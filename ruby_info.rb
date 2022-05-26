@@ -31,7 +31,10 @@ module VersInfo
 
       highlight "\n#{RUBY_DESCRIPTION}"
       puts
-      puts " Build Type/Info: #{ri2_vers}" if WIN
+      puts "RUBY_ENGINE:         #{RUBY_ENGINE}"
+      puts "RUBY_ENGINE_VERSION: #{RUBY_ENGINE_VERSION}"
+      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}"
+      puts "\n Build Type/Info: #{ri2_vers}" if WIN
       gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"] ?
         RbConfig::CONFIG["CC_VERSION_MESSAGE"][/\A.+?\n/].strip : 'unknown'
       puts "        gcc info: #{gcc}"
@@ -98,18 +101,21 @@ module VersInfo
       end
 
 
-      highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 5} Require Test #{@@dash * 5}       #{@@dash * 5} Require Test #{@@dash * 5}"
-      puts chk_cli("bundle -v", /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('dbm'     , 'DBM'     , 'zlib'          , 'Zlib')
+      highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 6} Require Test #{@@dash * 6}     #{@@dash * 5} Require Test #{@@dash * 5}"
+      puts chk_cli("bundle -v",      /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+        loads('dbm'     , 'DBM'   , 'win32/registry', 'Win32::Registry')
 
-      puts chk_cli("gem --version", /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('digest'  , 'Digest'  , 'win32/registry', 'Win32::Registry')
+      puts chk_cli("gem --version",  /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+        loads('debug'  , 'Debug'  , 'win32ole'      , 'WIN32OLE')
 
-      puts chk_cli("irb --version", /\Airb +(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('fiddle'  , 'Fiddle'  , 'win32ole'      , 'WIN32OLE')
-
+      puts chk_cli("irb --version",  /\Airb +(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+        loads('digest'  , 'Digest')
+      puts chk_cli("racc --version", /\Aracc version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+        loads('fiddle'  , 'Fiddle')
       puts chk_cli("rake -V", /\Arake, version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads('socket'  , 'Socket')
+      puts chk_cli("rbs -v" , /\Arbs (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/)
+      puts chk_cli("rdoc -v", /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/)
 
       gem_list
     end
@@ -129,18 +135,22 @@ module VersInfo
     end
 
     def loads(req1, str1, req2 = nil, str2 = nil)
+      wid1 = 31
+      wid2 = 15
       begin
-        require req1
-        str = "#{str1.ljust(15)}  Ok            "
+        str = ("#{str1.ljust wid2}  " +
+          ((WIN && RUBY_VERSION < '3.1' && req1 == 'debug') ? 'na' : 'Ok')).ljust wid1
       rescue LoadError
-        str = "#{str1.ljust(15)}  LoadError     "
+        str = "#{str1.ljust wid2}  LoadError".ljust wid1
+      rescue => e
+        str = "#{str1.ljust wid2}  #{e.class}".ljust wid1
       end
       if req2 && (WIN || !req2[/\Awin32/])
         begin
           require req2
-          str + "#{str2.ljust(15)}  Ok"
+          str + "#{str2.ljust wid2}  Ok"
         rescue LoadError
-          str + "#{str2.ljust(15)}  LoadError"
+          str + "#{str2.ljust wid2}  LoadError"
         end
       else
         str.strip
@@ -239,6 +249,7 @@ module VersInfo
 
         puts bndl ? "#{str_dflt} #{str_bndl}".rstrip : "#{str_dflt}".rstrip
       }
+      puts ''
     end
 
     def ssl_methods
@@ -270,15 +281,17 @@ module VersInfo
 
     def chk_cli(cmd, regex)
       wid = 36
+      return 'rbs       na'.ljust(wid) if cmd.start_with?('rbs') && RUBY_VERSION < '3'
+
       cmd_str = cmd[/\A[^ ]+/].ljust(10)
       require 'open3'
       ret = ''.dup
       Open3.popen3(cmd) {|stdin, stdout, stderr, wait_thr|
         ret = stdout.read.strip
       }
-      ret[regex] ? "#{cmd_str}Ok   #{$1}".ljust(wid) : "#{cmd_str}No version?".ljust(wid)
+      ret[regex] ? "#{cmd_str}Ok   #{$1}".ljust(wid) : "#{cmd_str}No   version?".ljust(wid)
     rescue
-      "#{cmd_str}Missing or incorrect bin".ljust(wid)
+      "#{cmd_str}missing/incorrect bin".ljust(wid)
     end
 
     def highlight(str)
