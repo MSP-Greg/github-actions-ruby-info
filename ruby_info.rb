@@ -31,10 +31,10 @@ module VersInfo
 
       highlight "\n#{RUBY_DESCRIPTION}"
       puts
-      puts "RUBY_ENGINE:         #{RUBY_ENGINE}"
-      puts "RUBY_ENGINE_VERSION: #{RUBY_ENGINE_VERSION}"
-      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}"
-      puts "\n Build Type/Info: #{ri2_vers}" if WIN
+      puts "RUBY_ENGINE:         #{defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'nil'}"
+      puts "RUBY_ENGINE_VERSION: #{defined?(RUBY_ENGINE_VERSION) ? RUBY_ENGINE_VERSION : 'nil'}"
+      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}", ''
+      puts " Build Type/Info: #{ri2_vers}" if WIN
       gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"] ?
         RbConfig::CONFIG["CC_VERSION_MESSAGE"][/\A.+?\n/].strip : 'unknown'
       puts "        gcc info: #{gcc}"
