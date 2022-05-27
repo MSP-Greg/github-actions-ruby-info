@@ -42,7 +42,18 @@ module VersInfo
       puts
       puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}"
       puts "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}"
+      puts ""
+
+      puts "RbConfig::CONFIG['configure_args']:"
+      ary = RbConfig::CONFIG['configure_args'].strip.split(/ '?--/)
+        .map { |e| e =~ /\A'?--/ ? e : "--#{e}" }
+        .map { |e| (e.end_with?("'") && !e.start_with?("'")) ? e.sub("--", "'--") : e }
+        .map { |e| "  #{e}" }
+#      ary[0] = ary[0].sub '--', ''
+      ary = ary
+      puts *ary
       puts
+
       first('rubygems'  , 'Gem::VERSION'  , 2)  { Gem::VERSION     }
       puts
       first('bigdecimal', 'BigDecimal.ver', 2)  {
