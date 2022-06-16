@@ -3,7 +3,8 @@
 
 # Copyright (C) 2017-2020 MSP-Greg
 
-require "rbconfig" unless defined? RbConfig
+require 'rbconfig' unless defined? RbConfig
+require 'tmpdir'
 
 module VersInfo
 
@@ -42,6 +43,11 @@ module VersInfo
       puts
       puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}"
       puts "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}"
+      puts ""
+      puts "Dir.tmpdir:  #{Dir.tmpdir}"
+      if (t = ENV['RUNNER_TEMP'])
+        puts "RUNNER_TEMP: #{t}"
+      end
       puts ""
 
       puts "RbConfig::CONFIG['configure_args']:"
