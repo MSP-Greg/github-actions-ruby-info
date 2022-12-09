@@ -68,8 +68,7 @@ module TestSSL
                 server_connect(port) { |ssl|
                   ssl.puts 'abc'; ssl.gets
                 }
-              rescue OpenSSL::SSL::SSLError, Errno::ECONNRESET => e
-                # puts e.message
+              rescue OpenSSL::SSL::SSLError, Errno::ECONNRESET
               else
                 supported << desc
               end
@@ -187,20 +186,14 @@ module TestSSL
           end
           threads.unshift client_thread
         ensure
-          # Terminate existing connections. If a thread did 'pend', re-raise it.
-          pend = nil
           threads.each { |th|
             begin
               th.join(10) or
                 th.raise(RuntimeError, '[start_server] thread did not exit in 10 secs')
-#            rescue (defined?(MiniTest::Skip) ? MiniTest::Skip : Test::Unit::PendedError)
-#              # MiniTest::Skip is for the Ruby tree
-#              pend = $!
             rescue Exception => e
               puts "threads #{e.message}"
             end
           }
-#          raise pend if pend
 
           errs = []
           values = []

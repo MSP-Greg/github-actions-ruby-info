@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # encoding: UTF-8
 
-# Copyright (C) 2017-2020 MSP-Greg
+# Copyright (C) 2017-2022 MSP-Greg
 
 require 'rbconfig' unless defined? RbConfig
 require 'tmpdir'
@@ -9,22 +9,30 @@ require 'tmpdir'
 module VersInfo
 
   SIGNAL_LIST = Signal.list.keys.sort
-  YELLOW = "\e[33m"
-  RESET = "\e[0m"
 
-  @@col_wid = [34, 14, 17, 26, 10, 16]
+  if IO === $stdout
+    YELLOW = "\e[33m"
+    RESET  = "\e[0m"
+  else
+    YELLOW = ''
+    RESET  = ''
+  end
 
-  WIN = !!RUBY_PLATFORM[/mingw/]
+  BIN_DIR = RbConfig::CONFIG['bindir']
+
+  COL_WIDTH = [34, 14, 17, 26, 10, 16]
+
+  WIN = !!RUBY_PLATFORM[/mingw|mswin/]
 
   # some fonts render \u2015 as a solid, other not...
-  case ARGV[0]
+  DASH = case ARGV[0]
   when 'utf-8'
-    @@dash = "\u2500".dup.force_encoding 'utf-8'
+    "\u2500".dup.force_encoding 'utf-8'
   when 'Windows-1252'
-    @@dash = 151.chr
+    151.chr
   else
-    @@dash = "\u2500".dup.force_encoding 'utf-8'
-  end
+    "\u2500".dup.force_encoding 'utf-8'
+  end.freeze
 
   class << self
 
@@ -36,14 +44,15 @@ module VersInfo
       puts "RUBY_ENGINE_VERSION: #{defined?(RUBY_ENGINE_VERSION) ? RUBY_ENGINE_VERSION : 'nil'}"
       puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}", ''
       puts " Build Type/Info: #{ri2_vers}" if WIN
-      gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"] ?
-        RbConfig::CONFIG["CC_VERSION_MESSAGE"][/\A.+?\n/].strip : 'unknown'
-      puts "        gcc info: #{gcc}"
+      if (gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"])
+        puts "        gcc info: #{gcc[/\A.+?\n/].strip}"
+      end
       puts "RbConfig::TOPDIR: #{RbConfig::TOPDIR}"
       puts
-      puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}"
-      puts "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}"
-      puts ""
+      puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}\n" \
+           "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}\n" \
+           "RbConfig::CONFIG['ruby_version']:   #{RbConfig::CONFIG['ruby_version']}"
+      puts
       puts "Dir.tmpdir:  #{Dir.tmpdir}"
       if (t = ENV['RUNNER_TEMP'])
         puts "RUNNER_TEMP: #{t}"
@@ -55,12 +64,12 @@ module VersInfo
         .map { |e| e =~ /\A'?--/ ? e : "--#{e}" }
         .map { |e| (e.end_with?("'") && !e.start_with?("'")) ? e.sub("--", "'--") : e }
         .map { |e| "  #{e}" }
-#      ary[0] = ary[0].sub '--', ''
-      ary = ary
-      puts *ary
+      puts(*ary)
       puts
 
-      first('rubygems'  , 'Gem::VERSION'  , 2)  { Gem::VERSION     }
+      first('rubygems'  , 'Gem::VERSION'    , 2)  { Gem::VERSION      }
+      first('bundler'   , 'Bundler::VERSION', 2)  { Bundler::VERSION }
+
       puts
       first('bigdecimal', 'BigDecimal.ver', 2)  {
         BigDecimal.const_defined?(:VERSION) ? BigDecimal::VERSION : BigDecimal.ver
@@ -100,12 +109,12 @@ module VersInfo
 
       if const_defined?(:Integer)
         puts Integer.const_defined?(:GMP_VERSION) ?
-          "#{'Integer::GMP_VERSION'.ljust(@@col_wid[3])}#{Integer::GMP_VERSION}" :
-          "#{'Integer::GMP_VERSION'.ljust(@@col_wid[3])}Unknown"
+          "#{'Integer::GMP_VERSION'.ljust(COL_WIDTH[3])}#{Integer::GMP_VERSION}" :
+          "#{'Integer::GMP_VERSION'.ljust(COL_WIDTH[3])}Unknown"
       elsif const_defined?(:Bignum)
         puts Bignum.const_defined?(:GMP_VERSION) ?
-          "#{'Bignum::GMP_VERSION'.ljust( @@col_wid[3])}#{Bignum::GMP_VERSION}" :
-          "#{'Bignum::GMP_VERSION'.ljust( @@col_wid[3])}Unknown"
+          "#{'Bignum::GMP_VERSION'.ljust( COL_WIDTH[3])}#{Bignum::GMP_VERSION}" :
+          "#{'Bignum::GMP_VERSION'.ljust( COL_WIDTH[3])}Unknown"
       end
 
       puts '', "Available signals:"
@@ -118,7 +127,7 @@ module VersInfo
       end
 
 
-      highlight "\n#{@@dash * 5} CLI Test #{@@dash * 17}    #{@@dash * 6} Require Test #{@@dash * 6}     #{@@dash * 5} Require Test #{@@dash * 5}"
+      highlight "\n#{DASH * 5} CLI Test #{DASH * 17}    #{DASH * 6} Require Test #{DASH * 6}     #{DASH * 5} Require Test #{DASH * 5}"
       puts chk_cli("bundle -v",      /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
         loads('dbm'     , 'DBM'   , 'win32/registry', 'Win32::Registry')
 
@@ -175,7 +184,7 @@ module VersInfo
     end
 
     def first(req, text, idx)
-      col = idx > 10 ? idx : @@col_wid[idx]
+      col = idx > 10 ? idx : COL_WIDTH[idx]
       require req
       puts "#{text.ljust(col)}#{yield}"
       true
@@ -186,7 +195,7 @@ module VersInfo
 
     def additional(text, idx, indent = 0)
       fn = yield
-      puts "#{(' ' * indent + text).ljust(@@col_wid[idx])}#{fn}"
+      puts "#{(' ' * indent + text).ljust(COL_WIDTH[idx])}#{fn}"
     rescue LoadError
     end
 
@@ -205,13 +214,13 @@ module VersInfo
         elsif Dir.exist? fn
           found = "#{'Dir  Exists'.ljust(23)}#{disp_fn}\n".dup
           unless fn == (t = File.realpath(fn))
-            found << "#{' ' * @@col_wid[idx]}#{'Dir  realpath'.ljust(23)}#{t}\n"
+            found << "#{' ' * COL_WIDTH[idx]}#{'Dir  realpath'.ljust(23)}#{t}\n"
           end
         else
           found = "#{'Dir  Not Found!'.ljust(23)}#{fn}"
         end
       end
-      puts "#{(' ' * indent + text).ljust(@@col_wid[idx])}#{found}"
+      puts "#{(' ' * indent + text).ljust(COL_WIDTH[idx])}#{found}"
     rescue LoadError
     end
 
@@ -230,10 +239,10 @@ module VersInfo
     def double(req, text1, text2, idx1, idx2, idx3)
       require req
       val1, val2 = yield
-      puts "#{text1.ljust(@@col_wid[idx1])}#{val1.ljust(@@col_wid[idx2])}" \
-           "#{text2.ljust(@@col_wid[idx3])}#{val2}"
+      puts "#{text1.ljust(COL_WIDTH[idx1])}#{val1.ljust(COL_WIDTH[idx2])}" \
+           "#{text2.ljust(COL_WIDTH[idx3])}#{val2}"
     rescue LoadError
-      puts "#{text1.ljust(@@col_wid[idx1])}NOT FOUND!"
+      puts "#{text1.ljust(COL_WIDTH[idx1])}NOT FOUND!"
     end
 
     def gem_list
@@ -253,7 +262,9 @@ module VersInfo
       ary_default.sort_by! { |a| a[0] }
       ary_bundled.sort_by! { |a| a[0] }
 
-      highlight "\n#{@@dash * 23} #{"Default Gems #{@@dash * 5}".ljust(name_wid)} #{@@dash * 23} Bundled Gems #{@@dash * 5}"
+      return if ary_default.empty? && ary_bundled.empty?
+
+      highlight "\n#{DASH * 23} #{"Default Gems #{DASH * 5}".ljust(name_wid)} #{DASH * 23} Bundled Gems #{DASH * 5}"
 
       max_rows = [ary_default.length || 0, ary_bundled.length || 0].max
 
@@ -299,16 +310,19 @@ module VersInfo
     def chk_cli(cmd, regex)
       wid = 36
       return 'rbs       na'.ljust(wid) if cmd.start_with?('rbs') && RUBY_VERSION < '3'
-
       cmd_str = cmd[/\A[^ ]+/].ljust(10)
-      require 'open3'
-      ret = ''.dup
-      Open3.popen3(cmd) {|stdin, stdout, stderr, wait_thr|
-        ret = stdout.read.strip
-      }
-      ret[regex] ? "#{cmd_str}Ok   #{$1}".ljust(wid) : "#{cmd_str}No   version?".ljust(wid)
+      if Dir["#{cmd[/\A[^ ]+/]}*", BIN_DIR].empty?
+        "#{cmd_str}na   missing binstub".ljust(wid)
+      else
+        require 'open3'
+        ret = ''.dup
+        Open3.popen3(cmd) {|stdin, stdout, stderr, wait_thr|
+          ret = stdout.read.strip
+        }
+        ret[regex] ? "#{cmd_str}Ok   #{$1}".ljust(wid) : "#{cmd_str}No   version?".ljust(wid)
+      end
     rescue
-      "#{cmd_str}missing/incorrect bin".ljust(wid)
+      "#{cmd_str}incorrect binstub".ljust(wid)
     end
 
     def highlight(str)
@@ -320,4 +334,5 @@ module VersInfo
   end
 end
 
-VersInfo.run ; exit 0
+VersInfo.run
+exit 0 if IO === $stdout

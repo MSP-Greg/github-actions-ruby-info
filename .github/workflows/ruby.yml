@@ -38,6 +38,9 @@ jobs:
       - name: Ruby Info
         run:  ruby ruby_info.rb
 
+      - name: Ruby libyaml bug
+        run:  ruby libyaml_trailing_space.rb
+
       - name: Windows ridk version
         if:   startsWith(matrix.os, 'windows') && matrix.ruby > '2.3' && matrix.ruby != 'mswin'
         run:  ridk version
