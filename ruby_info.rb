@@ -127,22 +127,30 @@ module VersInfo
         puts "  #{SIGNAL_LIST.map { |s| s.ljust 7 }.join}"
       end
 
+      str = "\n#{DASH * 5} CLI Test #{DASH * 17}    #{DASH * 6} Require Test #{DASH * 6}"
+      if WIN 
+        highlight "#{str}     #{DASH * 5} Require Test #{DASH * 5}"
+      else
+        highlight str
+      end
 
-      highlight "\n#{DASH * 5} CLI Test #{DASH * 17}    #{DASH * 6} Require Test #{DASH * 6}     #{DASH * 5} Require Test #{DASH * 5}"
-      puts chk_cli("bundle -v",      /\ABundler version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('dbm'     , 'DBM'   , 'win32/registry', 'Win32::Registry')
+      re_version = '(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9.]+)?)'
 
-      puts chk_cli("gem --version",  /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
+      puts chk_cli("bundle -v",      /\ABundler version #{re_version}/) +
+        loads('dbm'    , 'DBM'    , 'win32/registry', 'Win32::Registry')
+
+      puts chk_cli("gem --version",  /\A#{re_version}/) +
         loads('debug'  , 'Debug'  , 'win32ole'      , 'WIN32OLE')
 
-      puts chk_cli("irb --version",  /\Airb +(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('digest'  , 'Digest')
-      puts chk_cli("racc --version", /\Aracc version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('fiddle'  , 'Fiddle')
-      puts chk_cli("rake -V", /\Arake, version (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/) +
-        loads('socket'  , 'Socket')
-      puts chk_cli("rbs -v" , /\Arbs (\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/)
-      puts chk_cli("rdoc -v", /\A(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9]+)?)/)
+      puts chk_cli("irb --version",  /\Airb +#{re_version}/) +
+        loads('digest' , 'Digest')
+      puts chk_cli("racc --version", /\Aracc version #{re_version}/) +
+        loads('fiddle' , 'Fiddle')
+      puts chk_cli("rake -V", /\Arake, version #{re_version}/) +
+        loads('socket' , 'Socket')
+      puts chk_cli("rbs -v" , /\Arbs #{re_version}/)
+      puts chk_cli("rdbg -v", /\Ardbg #{re_version}/)
+      puts chk_cli("rdoc -v", /\A#{re_version}/)
 
       gem_list
     end
@@ -162,22 +170,29 @@ module VersInfo
     end
 
     def loads(req1, str1, req2 = nil, str2 = nil)
-      wid1 = 31
-      wid2 = 15
+      wid1 = 30
+      wid2 = 11
+      wid3 = 15
       begin
-        str = ("#{str1.ljust wid2}  " +
-          ((WIN && RUBY_VERSION < '3.1' && req1 == 'debug') ? 'na' : 'Ok')).ljust wid1
+        if (req1 == 'dbm'   && RUBY_VERSION > '3.1') ||
+           (req1 == 'debug' && RUBY_VERSION < '3.0')
+          str = "#{str1.ljust wid2}  na".ljust(wid1+1)
+        else
+          require req1
+          str = ("#{str1.ljust wid2}  " +
+            ((WIN && RUBY_VERSION < '3.1' && req1 == 'debug') ? 'na' : '✅')).ljust wid1
+        end
       rescue LoadError
-        str = "#{str1.ljust wid2}  LoadError".ljust wid1
+        str = "#{str1.ljust wid2}  ❌ LoadError".ljust wid1
       rescue => e
         str = "#{str1.ljust wid2}  #{e.class}".ljust wid1
       end
       if req2 && (WIN || !req2[/\Awin32/])
         begin
           require req2
-          str + "#{str2.ljust wid2}  Ok"
+          str + "#{str2.ljust wid3} ✅"
         rescue LoadError
-          str + "#{str2.ljust wid2}  LoadError"
+          str + "#{str2.ljust wid3} ❌ LoadError"
         end
       else
         str.strip
@@ -310,20 +325,25 @@ module VersInfo
 
     def chk_cli(cmd, regex)
       wid = 36
-      return 'rbs       na'.ljust(wid) if cmd.start_with?('rbs') && RUBY_VERSION < '3'
+      return 'rbs       na'.ljust(wid) if cmd.start_with?('rbs')  && RUBY_VERSION < '3'
+      return 'rdbg      na'.ljust(wid) if cmd.start_with?('rdbg') && RUBY_VERSION < '3.1'
       cmd_str = cmd[/\A[^ ]+/].ljust(10)
-      if Dir["#{cmd[/\A[^ ]+/]}*", BIN_DIR].empty?
-        "#{cmd_str}na   missing binstub".ljust(wid)
-      else
+      if File.exist? "#{BIN_DIR}/#{cmd_str}".strip
         require 'open3'
         ret = ''.dup
         Open3.popen3(cmd) {|stdin, stdout, stderr, wait_thr|
           ret = stdout.read.strip
         }
-        ret[regex] ? "#{cmd_str}Ok   #{$1}".ljust(wid) : "#{cmd_str}No   version?".ljust(wid)
+        if ret[regex]
+          "#{cmd_str}✅   #{$1}".ljust(wid)
+        else
+          "#{cmd_str}❌   version?".ljust(wid)
+        end
+      else
+        "#{cmd_str}❌   missing binstub".ljust(wid)
       end
-    rescue
-      "#{cmd_str}incorrect binstub".ljust(wid)
+    rescue => e
+      "#{cmd_str}❌   #{e.class}".ljust(wid)
     end
 
     def highlight(str)
