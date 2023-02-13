@@ -52,7 +52,8 @@ module VersInfo
       puts "RbConfig::CONFIG['LIBRUBY_SO']:     #{RbConfig::CONFIG['LIBRUBY_SO']}\n" \
            "RbConfig::CONFIG['LIBRUBY_SONAME']: #{RbConfig::CONFIG['LIBRUBY_SONAME'] || 'nil'}\n" \
            "RbConfig::CONFIG['ruby_version']:   #{RbConfig::CONFIG['ruby_version']}\n" \
-           "RbConfig::CONFIG['DLEXT']:          #{RbConfig::CONFIG['DLEXT']}"
+           "RbConfig::CONFIG['DLEXT']:          #{RbConfig::CONFIG['DLEXT']}\n" \
+           "RbConfig::CONFIG['host_os']:        #{RbConfig::CONFIG['host_os']}"
       puts
       puts "Dir.tmpdir:  #{Dir.tmpdir}"
       if (t = ENV['RUNNER_TEMP'])
