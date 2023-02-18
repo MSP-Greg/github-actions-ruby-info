@@ -44,5 +44,5 @@ jobs:
         run:  ruby libyaml_trailing_space.rb
 
       - name: Windows ridk version
-        if:   startsWith(matrix.os, 'windows') && matrix.ruby > '2.3' && matrix.ruby != 'mswin'
+        if:   startsWith(matrix.os, 'windows') && matrix.ruby > '2.3' && matrix.ruby != 'mswin' && !startsWith(matrix.ruby, 'jruby')
         run:  ridk version

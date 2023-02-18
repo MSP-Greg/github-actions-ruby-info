@@ -38,14 +38,18 @@ module VersInfo
   class << self
 
     def run
-      puts "\nEtc.nprocessors: #{Etc.nprocessors}\n" \
-             "     Dir.tmpdir: #{Dir.tmpdir}"
-      if (t = ENV['RUNNER_TEMP'])
-        puts "    RUNNER_TEMP: #{t}"
+      puts ''
+      puts   "     Etc.nprocessors: #{Etc.nprocessors}" if Etc.respond_to?(:nprocessors)
+      if (np = ENV['NUMBER_OF_PROCESSORS'])
+        puts "NUMBER_OF_PROCESSORS: #{np}"
+      end
+      puts   "          Dir.tmpdir: #{Dir.tmpdir}"
+      if (rt = ENV['RUNNER_TEMP'])
+        puts "         RUNNER_TEMP: #{rt}"
       end
       puts ""
 
-      highlight "\n#{RUBY_DESCRIPTION}"
+      highlight "#{RUBY_DESCRIPTION}"
       puts
       puts "RUBY_ENGINE:         #{defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'nil'}"
       puts "RUBY_ENGINE_VERSION: #{defined?(RUBY_ENGINE_VERSION) ? RUBY_ENGINE_VERSION : 'nil'}"
