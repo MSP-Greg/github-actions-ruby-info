@@ -5,6 +5,7 @@
 
 require 'rbconfig' unless defined? RbConfig
 require 'tmpdir'
+require 'etc'
 
 module VersInfo
 
@@ -37,6 +38,10 @@ module VersInfo
   class << self
 
     def run
+      puts "\nEtc.nprocessors: #{Etc.nprocessors}\n" \
+             "     Dir.tmpdir: #{Dir.tmpdir}"
+      puts   "    RUNNER_TEMP: #{t}" if (t = ENV['RUNNER_TEMP'])
+      puts ""
 
       highlight "\n#{RUBY_DESCRIPTION}"
       puts
@@ -55,11 +60,6 @@ module VersInfo
            "RbConfig::CONFIG['DLEXT']:          #{RbConfig::CONFIG['DLEXT']}\n" \
            "RbConfig::CONFIG['host_os']:        #{RbConfig::CONFIG['host_os']}"
       puts
-      puts "Dir.tmpdir:  #{Dir.tmpdir}"
-      if (t = ENV['RUNNER_TEMP'])
-        puts "RUNNER_TEMP: #{t}"
-      end
-      puts ""
 
       puts "RbConfig::CONFIG['configure_args']:"
       ary = RbConfig::CONFIG['configure_args'].strip.split(/ '?--/)
