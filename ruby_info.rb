@@ -40,7 +40,9 @@ module VersInfo
     def run
       puts "\nEtc.nprocessors: #{Etc.nprocessors}\n" \
              "     Dir.tmpdir: #{Dir.tmpdir}"
-      puts   "    RUNNER_TEMP: #{t}" if (t = ENV['RUNNER_TEMP'])
+      if (t = ENV['RUNNER_TEMP'])
+        puts "    RUNNER_TEMP: #{t}"
+      end
       puts ""
 
       highlight "\n#{RUBY_DESCRIPTION}"
