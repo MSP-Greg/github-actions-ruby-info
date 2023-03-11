@@ -18,6 +18,8 @@ jobs:
           - { os: ubuntu-20.04 , ruby: truffleruby-head }
           - { os: ubuntu-22.04 , ruby: 3.1   }
           - { os: ubuntu-22.04 , ruby: head  }
+          - { os: ubuntu-22.04 , ruby: truffleruby      }
+          - { os: ubuntu-22.04 , ruby: truffleruby-head }
           - { os: macos-12     , ruby: jruby }
           - { os: windows-2019 , ruby: mingw }
           - { os: windows-2019 , ruby: mswin }
