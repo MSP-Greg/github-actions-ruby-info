@@ -112,9 +112,12 @@ module VersInfo
       puts
 
       double('psych', 'Psych::VERSION', 'LIBYAML_VERSION', 3, 1, 2) { [Psych::VERSION, Psych::LIBYAML_VERSION] }
-      require 'readline'
-      @rl_type = (Readline.method(:line_buffer).source_location ? 'rb' : 'so')
-      first('readline', "Readline::VERSION (#{@rl_type})", 3) { Readline::VERSION }
+      begin
+        require 'readline'
+        @rl_type = (Readline.method(:line_buffer).source_location ? 'rb' : 'so')
+        first('readline', "Readline::VERSION (#{@rl_type})", 3) { Readline::VERSION }
+      rescue LoadError
+      end
       double('zlib', 'Zlib::VERSION', 'ZLIB_VERSION', 3, 1, 2) { [Zlib::VERSION, Zlib::ZLIB_VERSION] }
 
       if const_defined?(:Integer)
