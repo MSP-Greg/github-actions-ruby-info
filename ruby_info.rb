@@ -140,7 +140,7 @@ module VersInfo
       end
 
       str = "\n#{DASH * 5} CLI Test #{DASH * 17}    #{DASH * 6} Require Test #{DASH * 6}"
-      if WIN 
+      if WIN
         highlight "#{str}     #{DASH * 5} Require Test #{DASH * 5}"
       else
         highlight str
@@ -339,6 +339,7 @@ module VersInfo
       wid = 36
       return 'rbs       na'.ljust(wid) if cmd.start_with?('rbs')  && RUBY_VERSION < '3'
       return 'rdbg      na'.ljust(wid) if cmd.start_with?('rdbg') && RUBY_VERSION < '3.1'
+
       cmd_str = cmd[/\A[^ ]+/].ljust(10)
       if File.exist? "#{BIN_DIR}/#{cmd_str}".strip
         require 'open3'
