@@ -278,8 +278,11 @@ module VersInfo
       ary_default = []
       ary_bundled = []
 
+      ruby_gems = Gem.default_dir.start_with?(RbConfig::TOPDIR) ?
+        Gem.default_dir : Gem.dir
+
       Gem::Specification.each { |s|
-        if s.spec_dir.start_with? Gem.dir
+        if s.spec_dir.start_with? ruby_gems
           if s.default_gem?
             ary_default << [s.name, s.version.to_s]
           else
