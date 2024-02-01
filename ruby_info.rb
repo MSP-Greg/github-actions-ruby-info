@@ -53,7 +53,8 @@ module VersInfo
       puts
       puts "RUBY_ENGINE:         #{defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'nil'}"
       puts "RUBY_ENGINE_VERSION: #{defined?(RUBY_ENGINE_VERSION) ? RUBY_ENGINE_VERSION : 'nil'}"
-      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}", ''
+      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}"
+      puts "RUBY_PATCHLEVEL:     #{RUBY_PATCHLEVEL}", ''
       puts " Build Type/Info: #{ri2_vers}" if WIN
       if (gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"])
         puts "        gcc info: #{gcc[/\A.+?\n/].strip}"
