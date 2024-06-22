@@ -47,14 +47,17 @@ module VersInfo
       if (rt = ENV['RUNNER_TEMP'])
         puts "         RUNNER_TEMP: #{rt}"
       end
-      puts ""
 
+      puts "\nRUBY_DESCRIPTION:"
       highlight "#{RUBY_DESCRIPTION}"
-      puts
-      puts "RUBY_ENGINE:         #{defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'nil'}"
-      puts "RUBY_ENGINE_VERSION: #{defined?(RUBY_ENGINE_VERSION) ? RUBY_ENGINE_VERSION : 'nil'}"
-      puts "RUBY_PLATFORM:       #{RUBY_PLATFORM}"
-      puts "RUBY_PATCHLEVEL:     #{RUBY_PATCHLEVEL}", ''
+
+      # log constants
+      cnsts = Object.constants.grep(/\ARUBY_/).sort
+      cnsts.reject! { |c| c == :RUBY_DESCRIPTION }
+      str = +"\n"
+      cnsts.each { |c| str << "#{c.to_s.ljust 20} #{Object.const_get c}\n" }
+      puts str, ''
+
       puts " Build Type/Info: #{ri2_vers}" if WIN
       if (gcc = RbConfig::CONFIG["CC_VERSION_MESSAGE"])
         puts "        gcc info: #{gcc[/\A.+?\n/].strip}"
