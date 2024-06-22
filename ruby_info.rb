@@ -54,7 +54,7 @@ module VersInfo
       # log constants
       cnsts = Object.constants.grep(/\ARUBY_/).sort
       cnsts.reject! { |c| c == :RUBY_DESCRIPTION }
-      str = +"\n"
+      str = "\n".dup
       cnsts.each { |c| str << "#{c.to_s.ljust 20} #{Object.const_get c}\n" }
       puts str, ''
 
