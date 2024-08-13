@@ -23,6 +23,7 @@ jobs:
           - { os: ubuntu-24.04 , ruby: truffleruby      }
           - { os: ubuntu-24.04 , ruby: truffleruby-head }
           - { os: macos-14     , ruby: jruby            }
+          - { os: macos-13     , ruby: jruby            }
           - { os: macos-14     , ruby: truffleruby      }
           - { os: macos-14     , ruby: truffleruby-head }
           - { os: windows-2019 , ruby: mingw }

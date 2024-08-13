@@ -12,7 +12,8 @@ module VersInfo
   SIGNAL_LIST = Signal.list.keys.sort
 
   if IO === $stdout
-    YELLOW = "\e[38;2;223;223;16m"  # YELLOW = "\e[33m"
+    # YELLOW = "\e[38;2;223;223;16m"
+    YELLOW = "\e[93m"
     RESET  = "\e[0m"
   else
     YELLOW = ''
