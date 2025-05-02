@@ -1,0 +1,30 @@
+name: MRI Ubuntu
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  mri_ubuntu:
+    name: >-
+      ${{ matrix.os }}  ${{ matrix.ruby }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm, ubuntu-22.04, ubuntu-22.04-arm ]
+        ruby: [ head, 3.4, 3.3, 3.2, 3.1, '3.0', 2.7, 2.6, 2.5, 2.4, 2.3 ]
+
+    steps:
+      - name: repo checkout
+        uses: actions/checkout@v4
+
+      - name: set ruby version
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: none
+
+      - name: Ruby Info
+        run:  ruby ruby_info.rb
+
+      - name: Ruby libyaml bug
+        run:  ruby libyaml_trailing_space.rb
