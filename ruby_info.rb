@@ -154,18 +154,19 @@ module VersInfo
       re_version = '(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9.]+)?)'
 
       puts chk_cli("bundle -v",      /\ABundler version #{re_version}/) +
-        loads('dbm'    , 'DBM'    , 'win32/registry', 'Win32::Registry')
+        loads('date'    , 'Date'  , 'win32/registry', 'Win32::Registry')
 
       puts chk_cli("gem --version",  /\A#{re_version}/) +
-        loads('debug'  , 'Debug'  , 'win32ole'      , 'WIN32OLE')
+        loads('dbm'    , 'DBM'    , 'win32ole'      , 'WIN32OLE')
 
       puts chk_cli("irb --version",  /\Airb +#{re_version}/) +
-        loads('digest' , 'Digest')
+        loads('debug'  , 'Debug')
       puts chk_cli("racc --version", /\Aracc version #{re_version}/) +
-        loads('fiddle' , 'Fiddle')
+        loads('digest' , 'Digest')
       puts chk_cli("rake -V", /\Arake, version #{re_version}/) +
+        loads('fiddle' , 'Fiddle')
+      puts chk_cli("rbs -v" , /\Arbs #{re_version}/) +
         loads('socket' , 'Socket')
-      puts chk_cli("rbs -v" , /\Arbs #{re_version}/)
       puts chk_cli("rdbg -v", /\Ardbg #{re_version}/)
       puts chk_cli("rdoc -v", /\A#{re_version}/)
 
