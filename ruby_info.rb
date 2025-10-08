@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 # encoding: UTF-8
 
-# Copyright (C) 2017-2022 MSP-Greg
+# Copyright (C) 2017-2025 MSP-Greg
+
+STDOUT.syswrite "\n\n$LOAD_PATH\n#{$LOAD_PATH.join "\n"}\n"
 
 require 'rbconfig' unless defined? RbConfig
 require 'tmpdir'
