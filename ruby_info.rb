@@ -155,7 +155,7 @@ module VersInfo
 
       re_version = '(\d{1,2}\.\d{1,2}\.\d{1,2}(\.[a-z0-9.]+)?)'
 
-      puts chk_cli("bundle -v",      /\ABundler version #{re_version}/) +
+      puts chk_cli("bundle -v",      /\A(?: Bundler version )?#{re_version}/) +
         loads('date'    , 'Date'  , 'win32/registry', 'Win32::Registry')
 
       puts chk_cli("gem --version",  /\A#{re_version}/) +
